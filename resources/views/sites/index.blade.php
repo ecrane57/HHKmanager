@@ -66,7 +66,7 @@
 					            <div class="dropdown-menu" aria-labelledby="actionsButton">
 						            <button data-toggle="modal" data-target="#siteconfig" class="dropdown-item" id="getConfig" data-url="{{ route('sites.getConfig',['id'=>$site->id])}}">Config</button>
 						            <button data-toggle="modal" data-target="#sitecomments" class="dropdown-item" id="getComments" data-url="{{ route('sites.getComments',['id'=>$site->id])}}">Comments</button>   
-						        	<button data-toggle="modal" data-target="#upgradesite" class="dropdown-item" id="upgrade" data-site_id="{{ $site->id }}">Upgrade</button>
+						        	<button data-toggle="modal" data-target="#upgradesite" class="dropdown-item" id="upgrade" data-site_id="{{ $site->id }}" data-site_name="{!! $site->config['site']['Site_Name'] !!}">Upgrade</button>
 						        	@if($site->config['site']['Mode'] == "demo")
 						        		<a href="{{ route('sites.setLive', $site) }}" class="dropdown-item">Set Live</a>
 						        	@endif

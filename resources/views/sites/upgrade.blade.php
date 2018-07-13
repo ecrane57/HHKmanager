@@ -56,6 +56,8 @@
 		$(document).on('click', '#upgrade', function(e){
 
         	e.preventDefault();
+        	
+			$("#upgradesite #upgradesiteLabel").text("Upgrade " + $(this).data("site_name"));
 			$("#upgradesite #site_id").val($(this).data("site_id"));
 			
 		});

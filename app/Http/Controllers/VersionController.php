@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Rules\fileExists;
 use Storage;
 use Auth;
+use Zipper;
 
 class VersionController extends Controller
 {
@@ -31,7 +32,8 @@ class VersionController extends Controller
     {
 	    if(Auth::user()->hasAnyRole("Admin")){
         	$versions = Version::orderBy('release_date', 'desc')->withTrashed()->get();
-			return view('versions.index')->with(['versions'=>$versions]);
+        	$zips = Storage::disk("hhk")->files("zips");
+			return view('versions.index')->with(['versions'=>$versions, 'zips'=>$zips]);
 		}else{
 			return abort(403);
 		}
@@ -67,24 +69,50 @@ class VersionController extends Controller
 		        $request->patch = true;
 	        }
 	        
-	        $releaseNotes = "";
-	        if(Storage::disk("hhk")->exists($request->path . "/release_notes.txt")){
-		        $releaseNotes = Storage::disk("hhk")->get($request->path . "/release_notes.txt");
-		        $releaseNotes = str_replace(["\r\n", "\r", "\n"], '<br>', $releaseNotes);
+	        //unzip version
+	        
+	        $fullPath = Storage::disk("hhk")->path($request->path);
+	        $fileinfo = pathinfo($fullPath);
+	        try{
+		        $zip = Zipper::make($fullPath)->folder("hhk");
+				if(count($zip->listFiles("/^hhk\//i")) == 0){
+					Session::flash("error", "Cannot find 'hhk' directory");
+					return redirect()->route('versions.index');
+				}
+				
+		        if($request->patch == true){
+			        $zip->extractTo(Storage::disk("hhk")->path("patches/" . $fileinfo['filename']));
+			        $extractedpath = "patches/" . $fileinfo['filename'];
+		        }else{
+			        $zip->extractTo(Storage::disk("hhk")->path("fullreleases/" . $fileinfo['filename']));
+			        $extractedpath = "fullreleases/" . $fileinfo['filename'];
+		        }
+		        
+		        //delete original zip
+		        Storage::disk("hhk")->delete($request->path);
+		        
+		        $releaseNotes = "";
+		        if(Storage::disk("hhk")->exists($extractedpath . "/release_notes.txt")){
+			        $releaseNotes = Storage::disk("hhk")->get($extractedpath . "/release_notes.txt");
+			        $releaseNotes = str_replace(["\r\n", "\r", "\n"], '<br>', $releaseNotes);
+		        }
+		        
+		        $version = new Version;
+		        
+		        $version->name = $request->name;
+		        $version->filepath = $extractedpath;
+		        $version->patch = $request->patch;
+		        $version->release_date = $request->releaseDate;
+		        $version->release_notes = $releaseNotes;
+		        $version->save();
+		        
+		        Session::flash('success', 'New Version added');
+		        
+		        return redirect()->route('versions.index');
+		    }catch(\Exception $e){
+		        Session::flash('error', get_class($e));
+		        return redirect()->route('versions.index');
 	        }
-	        
-	        $version = new Version;
-	        
-	        $version->name = $request->name;
-	        $version->filepath = $request->path;
-	        $version->patch = $request->patch;
-	        $version->release_date = $request->releaseDate;
-	        $version->release_notes = $releaseNotes;
-	        $version->save();
-	        
-	        Session::flash('success', 'New Version added');
-	        
-	        return redirect()->route('versions.index');
 	    }else{
 		    return abort(403);
 	    }
@@ -136,12 +164,22 @@ class VersionController extends Controller
      * @param  \App\Version  $version
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Version $version)
+    public function destroy($id)
     {
 	    if(Auth::user()->hasAnyRole("Admin")){
-	        $version->delete();
-	        $version->save();
-	        return response()->json($version->trashed());
+		    $version = Version::withTrashed()->find($id);
+		    if($version->trashed()){
+			    if(Storage::disk("hhk")->exists($version->filepath)){
+				    Storage::disk("hhk")->deleteDirectory($version->filepath);
+			    }
+			    $version->forceDelete();
+			    Session::flash('success', 'Version deleted.');
+			    return redirect()->back();
+		    }else{
+			    $version->delete();
+				$version->save();
+				return response()->json($version->trashed());
+		    }
 	    }else{
 		    return abort(403);
 	    }

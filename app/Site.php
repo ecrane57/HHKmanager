@@ -11,7 +11,7 @@ use Carbon\Carbon;
 class Site extends Model
 {
 	
-	protected $appends = ['config','sysconfig', 'city', 'priceModel', 'roomCount', 'lastAccessed'];
+	protected $appends = ['config','sysconfig', 'city', 'priceModel', 'roomCount', 'lastAccessed', 'version', 'siteName'];
 	protected $casts = [
         'config' => 'collection',
     ];
@@ -21,16 +21,66 @@ class Site extends Model
     }
     
     public function getConfigAttribute(){
-	    return parse_ini_string(Storage::disk("prod")->get($this->url . "/conf/site.cfg"), true);
+	    try{
+		    return parse_ini_string(Storage::disk("prod")->get($this->url . "/conf/site.cfg"), true);
+	    }catch(\FileNotFoundException $e){
+		    return false;
+	    }catch(\Exception $e){
+		    return false;
+	    }
+    }
+    
+    public function getVersionAttribute(){
+	    try{
+		    $file = Storage::disk("prod")->get($this->url . "/classes/SysConst.php");
+			preg_match("/^class CodeVersion.*\s*const BUILD = ([0-9]*).*\s*const VERSION = ([0-9, .]*)/m", $file, $array);
+	    }catch(\Exception $e){
+		    return "Version not found";
+	    }
+	    
+	    if(count($array) >= 3){
+		    return $array[2] . " build " . $array[1];
+	    }else{
+		    return $this->config['code']['Version'] . " build " . $this->config['code']['Build'];
+	    }
+	    
     }
     
     public function getSchemaAttribute(){
-	    $defaultConnection = config('database.connections.mysql');
-        $newConnection = $defaultConnection;
-        $newConnection['database'] = $this->config['db']['Schema'];
-        Config::set('database.connections.' . $this->config['db']['Schema'], $newConnection);
-        
-        return DB::connection($this->config['db']['Schema']);
+	    try{
+		    //decrypt
+		    $key = "017d609a4b2d8910685595C8df";
+		    $key = hash('sha256', $key);
+		    $iv = "fYfhHeDmf j98UUy4";
+		    $iv = substr(hash('sha256', $iv), 0, 16);
+		    $encrypt_method = "AES-256-CBC";
+		    $password = openssl_decrypt(base64_decode($this->config['db']['Password']), $encrypt_method, $key, 0, $iv);
+	
+		    $defaultConnection = config('database.connections.mysql');
+	        $newConnection = $defaultConnection;
+	        $newConnection['database'] = $this->config['db']['Schema'];
+	        $newConnection['username'] = $this->config['db']['User'];
+	        $newConnection['password'] = $password;
+	        Config::set('database.connections.' . $this->config['db']['Schema'], $newConnection);
+	        
+	        return DB::connection($this->config['db']['Schema']);
+	    }catch(\Exception $e){
+		    return $e->getMessage();
+	    }
+	    
+    }
+    
+    public function hhkdecrypt($password){
+	    
+	    $key = "017d609a4b2d8910685595C8df";
+	    $key = hash('sha256', $key);
+	    $iv = "fYfhHeDmf j98UUy4";
+	    $iv = substr(hash('sha256', $iv), 0, 16);
+	    $encrypt_method = "AES-256-CBC";
+	    $output = false;
+	    
+	    $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+	    return $output;
     }
     
     public function getSysconfigAttribute(){
@@ -43,17 +93,17 @@ class Site extends Model
     }
     
     public function getCityAttribute(){
-	    $zipCode = $this->config['house']['Zip_Code'];
-	    if($zipCode){
-		    try{
+	    try{
+	    		$zipCode = $this->config['house']['Zip_Code'];
 	    		$result = $this->schema->table('postal_codes')->select('Zip_Code', 'City', 'State')->where('Zip_Code', '=', $zipCode)->first();
+	    		$return = $result->City . ', ' . $result->State;
+	    		return $return;
 	    	}catch(\Illuminate\Database\QueryException $e){
-		    	$result = false;
+		    	return "Zip code not found";
+	    	}catch(\Exception $e){
+		    	return "Zip code not found";
 	    	}
-	    }else{
-		    $result =  false;
-	    }
-	    return $result;
+	    
     }
     
     public function getPriceModelAttribute(){
@@ -92,7 +142,12 @@ class Site extends Model
 		    $lastAccessed = false;
 	    }
 	    if($lastAccessed){
-		   	$timezone = $this->config['calendar']['TimeZone'];
+		    if(isset($this->config['calendar']['TimeZone'])){
+		   		$timezone = $this->config['calendar']['TimeZone'];
+		   	}else if(isset($this->sysconfig['tz'])){
+			   	$timezone = $this->sysconfig['tz']->Value;
+		   	}
+		   	
 		   	if(!$timezone){
 				$timezone = "UTC";
 		    }
@@ -104,4 +159,16 @@ class Site extends Model
 
     }
     
+    public function getSiteNameAttribute(){
+		
+		if(isset($this->config['site']['Site_Name'])){
+			return $this->config['site']['Site_Name'];
+		}else if($this->sysconfig["siteName"]){
+			return $this->sysconfig["siteName"]->Value;
+		}else if($this->name){
+			return $this->name;
+		}else{
+			$this->url;
+		}
+    }
 }

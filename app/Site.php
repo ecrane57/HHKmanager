@@ -34,15 +34,20 @@ class Site extends Model
 	    try{
 		    $file = Storage::disk("prod")->get($this->url . "/classes/SysConst.php");
 			preg_match("/^class CodeVersion.*\s*const BUILD = ([0-9]*).*\s*const VERSION = ([0-9, .]*)/m", $file, $array);
+			preg_match("/^class CodeVersion.*\s*const BUILD = '(.*)'.*\s*const VERSION = '(.*)'/m", $file, $array2);
 	    }catch(\Exception $e){
 		    return "Version not found";
 	    }
 	    
-	    if(count($array) >= 3){
-		    return $array[2] . " build " . $array[1];
-	    }else{
+	    if(count($array) >= 3 && $array[2] != '' && $array[1] != ''){
+		    return $array[2] . "." . $array[1];
+	    }else if(count($array2) >= 3 && $array2[2] != '' && $array2[1] != ''){
+			return $array2[2] . "." . $array2[1];
+		}else if(isset($this->config['code']['Version'])){
 		    return $this->config['code']['Version'] . " build " . $this->config['code']['Build'];
-	    }
+	    }else{
+			return $version;
+		}
 	    
     }
     
@@ -94,15 +99,19 @@ class Site extends Model
     
     public function getCityAttribute(){
 	    try{
-	    		$zipCode = $this->config['house']['Zip_Code'];
-	    		$result = $this->schema->table('postal_codes')->select('Zip_Code', 'City', 'State')->where('Zip_Code', '=', $zipCode)->first();
-	    		$return = $result->City . ', ' . $result->State;
-	    		return $return;
-	    	}catch(\Illuminate\Database\QueryException $e){
-		    	return "Zip code not found";
-	    	}catch(\Exception $e){
-		    	return "Zip code not found";
+	    	if($this->sysconfig && $this->sysconfig->get('Zip_Code')){
+		    	$zipCode = $this->sysconfig->get('Zip_Code')->Value;
+	    	}else{
+		    	$zipCode = $this->config['house']['Zip_Code'];
 	    	}
+    		$result = $this->schema->table('postal_codes')->select('Zip_Code', 'City', 'State')->where('Zip_Code', '=', $zipCode)->first();
+    		$return = $result->City . ', ' . $result->State;
+    		return $return;
+    	}catch(\Illuminate\Database\QueryException $e){
+	    	return $e->getMessage();
+    	}catch(\Exception $e){
+	    	return $e->getMessage();
+    	}
 	    
     }
     

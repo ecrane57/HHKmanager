@@ -110,7 +110,7 @@ class VersionController extends Controller
 		        
 		        return redirect()->route('versions.index');
 		    }catch(\Exception $e){
-		        Session::flash('error', get_class($e));
+		        Session::flash('error', $e->getMessage());
 		        return redirect()->route('versions.index');
 	        }
 	    }else{

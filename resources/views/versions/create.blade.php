@@ -17,6 +17,20 @@
 				      		{!! Form::text('name', null, ['class'=>'form-control', 'placeholder'=>'Version']); !!}
 			      		</div>
 			      		<div class="form-group">
+				      		{!! Form::label('Select Zip', 'Select Zip', ['class'=>'sr-only']); !!}
+				      		<select class="form-control{{ $errors->has('version') ? ' form-control-danger' : '' }}  select2-zip" name="path">
+								<option></option>
+								@foreach($zips as $zip)
+									@if(old('path') == $zip)
+										<option value='{{ $zip }}' selected>{{ $zip }}</option>
+									@else
+										<option value='{{ $zip }}'>{{ $zip }}</option>
+									@endif
+								@endforeach
+							</select>
+			      		</div>
+<!--
+			      		<div class="form-group">
 				      		{!! Form::label('path', 'Path to directory'); !!}
 				      		<div class="input-group">
 					      		<div class="input-group-prepend">
@@ -25,6 +39,7 @@
 						  		{!! Form::text('path', null, ['class'=>'form-control', 'placeholder'=>'Path']); !!}
 				      		</div>
 			      		</div>
+-->
 			      		<div class="form-group">
 				      		<label for="patch" class="d-block">Is this a patch?</label>
 				      		<label class="switch">
@@ -47,3 +62,13 @@
     </div>
   </div>
 </div>
+
+@section('scripts')
+<script type="text/javascript">
+	$(document).ready(function(){
+		$(".select2-zip").select2({
+			placeholder: "Select Zip File"
+		});		
+	});
+</script>
+@append

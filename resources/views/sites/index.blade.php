@@ -11,16 +11,15 @@
 @endsection
 @section('content')
 @include("partials/messages")
-<!--
-	<h3 class="mb-4">{{ $mode }} Sites 
-		<button class="ml-2 mr-2 mr-sm-2 btn btn-success" data-toggle="modal" data-target="#createsite"><i class="fa fa-plus"></i> New Site</button>
-		<button class="ml-2 mr-2 mr-sm-2 btn btn-success" data-toggle="modal" data-target="#importsite"><i class="fa fa-plus"></i> Import Existing Site</button>
-	</h3>
--->
+	@if($mode == "Other")
+		<div class="alert alert-danger"><i class="fa fa-exclamation-triangle"></i> The following sites have issues that need resolving, usually updating the site URL will fix issues <i class="fa fa-exclamation-triangle"></i></div>
+	@endif
     <div class="row" id="sites-content">
 	    <div class="col-12">
 		    <table class="table table-striped" id="sitesTable">
 			    <thead>
+				    <th>ID</th>
+				    <th>Actions</th>
 				    <th>Site Name</th>
 				    <th>City</th>
 				    <th>Version</th>
@@ -28,26 +27,50 @@
 				    <th>Rooms</th>
 				    <th>Accessed</th>
 				    <th>User</th>
-				    <th>Actions</th>
 			    </thead>
 			    <tbody>
 			    @foreach($sites as $site)
+			    @if(!$site->config)
+			        <tr class="bg-danger text-white">
+			    @else
 			    	<tr>
+				@endif
+				    	<td>{{ $site->id }}</td>
+				    	<td>
+					    	<div class="btn-group ml-2">
+					            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="actionsButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Actions</button>
+					            <div class="dropdown-menu" aria-labelledby="actionsButton">
+						            <button data-toggle="modal" data-target="#editsite" class="dropdown-item" data-url="{{ route('sites.show', ['id'=>$site->id]) }}">Edit</button>
+						            <button data-toggle="modal" data-target="#siteconfig" class="dropdown-item" id="getConfig" data-url="{{ route('sites.getConfig',['id'=>$site->id])}}">Config</button>
+						            <button data-toggle="modal" data-target="#sitecomments" class="dropdown-item" id="getComments" data-url="{{ route('sites.getComments',['id'=>$site->id])}}">Comments</button>   
+						        	<button data-toggle="modal" data-target="#upgradesite" class="dropdown-item" id="upgrade" data-site_id="{{ $site->id }}" data-site_name="{{ $site->siteName }}">Upgrade</button>
+						        		<a href="/sites/{{ $site->id }}/notes/resv/1" class="dropdown-item" target="_blank">Convert first batch of Reservation Notes</a>
+						        		<a href="/sites/{{ $site->id }}/notes/visit/1" class="dropdown-item" target="_blank">Convert first batch of Visit Notes</a>
+						        		<a href="/sites/{{ $site->id }}/notes/psg/1" class="dropdown-item" target="_blank">Convert first batch of PSG Notes (DO LAST)</a>
+						        	@if($site->config && $site->config['site']['Mode'] == "demo")
+						        		<a href="{{ route('sites.setLive', $site) }}" class="dropdown-item">Set Live</a>
+						        	@endif
+						        	<!--<a href="{{ route('sites.destroy', $site) }}" class="dropdown-item">Delete Site</a>-->
+					            </div>
+				            </div>
+				    	</td>
 				    	<td>
 					    	@if($mode == "Live")
-					    		<a href="https://{{ $site->url }}.hospitalityhousekeeper.net" target="_blank">{!! $site->config['site']['Site_Name'] !!}</a>
+					    		<a href="https://{{ $site->url }}.hospitalityhousekeeper.net" target="_blank">{!! $site->siteName !!}</a>
+					    	@elseif($mode == "Demo")
+					    		<a href="https://hospitalityhousekeeper.net/{{ $site->url }}" target="_blank">{!! $site->siteName !!}</a>
 					    	@else
-					    		<a href="https://hospitalityhousekeeper.net/{{ $site->url }}" target="_blank">{!! $site->config['site']['Site_Name'] !!}</a>
+					    		{!! $site->siteName !!}
 					    	@endif
 					    </td>
 				    	<td>
-					    	@if($site->city)
-								{{ $site->city->City }}, {{ $site->city->State }}
-							@else
-								Zip Codes not loaded
-							@endif
+						{{ $site->city }}
 				    	</td>
-				    	<td>{{ $site->config['code']['Version'] }} build {{ $site->config['code']['Build'] }}</td>
+				    	<td>
+					    	@if($site->version)
+					    		{{ $site->version }}
+					    	@endif
+					    </td>
 				    	<td>{{ $site->priceModel }}</td>
 				    	<td>{{ $site->roomCount }}</td>
 				    	<td>
@@ -59,19 +82,6 @@
 					    	@if($site->lastAccessed)
 					    		{{ $site->lastAccessed->Username }}
 					    	@endif
-				    	</td>
-				    	<td>
-					    	<div class="btn-group ml-2">
-					            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="actionsButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Actions</button>
-					            <div class="dropdown-menu" aria-labelledby="actionsButton">
-						            <button data-toggle="modal" data-target="#siteconfig" class="dropdown-item" id="getConfig" data-url="{{ route('sites.getConfig',['id'=>$site->id])}}">Config</button>
-						            <button data-toggle="modal" data-target="#sitecomments" class="dropdown-item" id="getComments" data-url="{{ route('sites.getComments',['id'=>$site->id])}}">Comments</button>   
-						        	<button data-toggle="modal" data-target="#upgradesite" class="dropdown-item" id="upgrade" data-site_id="{{ $site->id }}" data-site_name="{!! $site->config['site']['Site_Name'] !!}">Upgrade</button>
-						        	@if($site->config['site']['Mode'] == "demo")
-						        		<a href="{{ route('sites.setLive', $site) }}" class="dropdown-item">Set Live</a>
-						        	@endif
-					            </div>
-				            </div>
 				    	</td>
 			    	</tr>
 		        @endforeach
@@ -85,6 +95,7 @@
     @include('sites.config')
     @include('users.setpw')
     @include('sites.comments')
+    @include('sites.edit')
 
 @endsection
 

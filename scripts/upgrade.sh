@@ -1,5 +1,6 @@
 #!/bin/bash
 
+pwd=""
 version="/var/www/manage/storage/app/hhk/$1/"
 site="/var/www/html/hhk/$2"
 
@@ -34,7 +35,6 @@ rsync+=" $version $site"
 
 #echo "Rsync command: $rsync"
 
-echo "<password>" | su -c "$rsync" -m "hhkapp"
-echo "<password>" | su -c "chown hhkapp:webdev $site -R" -m "hhkapp"
-echo "<password>" | su -c "chmod 775 $site -R" -m "hhkapp"
-echo "<password>" | su -c "chmod 777 $site/conf -R" -m "hhkapp"
+echo $pwd | su -c "$rsync" -m "hhkapp"
+echo $pwd | su -c "chown hhkapp:webdev $site -R" -m "hhkapp"
+echo $pwd | su -c "chmod 775 $site -R" -m "hhkapp"

@@ -53,6 +53,9 @@
 												<button @if(!$version->trashed()) style="display:none;" @endif class="dropdown-item" id="enable" data-url="{{ route('versions.restore', ['id'=>$version->id])}}">
 													<i class="fa fa-check-circle-o" aria-hidden="true"></i> Enable
 												</button>
+												{!! Form::open(['route' => ['versions.destroy', $version->id], 'method' => 'delete']) !!}
+													<input type="submit" @if(!$version->trashed()) style="display:none;" @endif class="dropdown-item" value="Delete" >
+												{!! Form::close() !!}
 												<button @if($version->trashed()) style="display:none;" @endif class="dropdown-item" id="disable" data-url="{{ route('versions.destroy', ['id'=>$version->id])}}">
 													<i class="fa fa-times-circle-o" aria-hidden="true"></i> Disable
 												</button>
@@ -108,11 +111,13 @@
             	tr_obj.find("#status").html("No");
             	tr_obj.find("#enable").show();
             	tr_obj.find("#disable").hide();
+            	tr_obj.find("#delete").show();
             	
             }else{
 	            tr_obj.find('#status').html("Yes");
 	            tr_obj.find("#enable").hide();
             	tr_obj.find("#disable").show();
+            	tr_obj.find("#delete").hide();
             }
         })
         .fail(function(){

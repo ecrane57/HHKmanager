@@ -48,6 +48,12 @@
 	              <span class="nav-link-text">Demo</span>
 	          </a>
             </li>
+            <li class="{{ active(route('sites.other')) }}">
+              <a href="{{ route('sites.other') }}">
+	              <i class="fa fa-exclamation-triangle"></i>
+	              <span class="nav-link-text">Other</span>
+	          </a>
+            </li>
           </ul>
         </li>
         @if(Auth::user()->hasAnyRole("Admin"))

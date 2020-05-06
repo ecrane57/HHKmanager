@@ -27,18 +27,20 @@ Route::resource('versions', 'VersionController', ['only' => ['index', 'store', '
 
 Route::get('sites/live', 'SiteController@live')->name('sites.live');
 Route::get('sites/demo', 'SiteController@demo')->name('sites.demo');
+Route::get('sites/other', 'SiteController@other')->name('sites.other');
 Route::get('sites/{id}/config', 'SiteController@getConfig')->name('sites.getConfig');
 Route::get('sites/{id}/comments', 'SiteController@getComments')->name('sites.getComments');
 Route::post('sites/import', 'SiteController@import')->name('sites.import');
 Route::post('sites/upgrade', 'SiteController@upgrade')->name('sites.upgrade');
 Route::get('sites/{site}/setLive', 'SiteController@setLive')->name('sites.setLive');
-Route::resource('sites', 'SiteController', ['only' => ['store','show']]);
+Route::get('sites/{site}/notes/{noteType}/{page}', 'SiteController@convertNotes')->name('sites.notes');
+Route::resource('sites', 'SiteController', ['only' => ['store','show', 'destroy', 'update']]);
 
 Route::match(['put','patch'], 'users/{id}/resetpassword', 'UserController@resetpassword')->name('users.resetpassword');
 Route::resource('users', 'UserController', ['only' => ['index', 'store']]);
 
 Route::resource('comments', 'CommentController', ['only' => ['store']]);
-
+Route::resource('reports', 'ReportController', ['only' => ['index']]);
 
 // Two Factor Authentication
 Route::get('2fa', 'TwoFactorController@showTwoFactorForm');

@@ -289,7 +289,7 @@ class SiteController extends Controller
 				
 				$site->url = $slugEnd;
 				$site->save();
-				session::flash('success', "Site " . $site->siteName . " moved successfully.<br><br><strong>Further tasks</strong><ul><li>Configure web server for $slugEnd.hospitalityhousekeeper.net</li></ul>");
+				session::flash('success', "Site " . $site->siteName . " moved successfully.<br><br><strong>Further tasks</strong><ul><li>Add 'Use ClientVHost $slugEnd $slugEnd' to /etc/httpd/conf.d/clients.conf</li></ul>");
 			}else{
 				session::flash('error', "The site could not be moved.");
 			}

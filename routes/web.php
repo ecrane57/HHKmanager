@@ -33,7 +33,6 @@ Route::get('sites/{id}/comments', 'SiteController@getComments')->name('sites.get
 Route::post('sites/import', 'SiteController@import')->name('sites.import');
 Route::post('sites/upgrade', 'SiteController@upgrade')->name('sites.upgrade');
 Route::get('sites/{site}/setLive', 'SiteController@setLive')->name('sites.setLive');
-Route::get('sites/{site}/notes/{noteType}/{page}', 'SiteController@convertNotes')->name('sites.notes');
 Route::resource('sites', 'SiteController', ['only' => ['store','show', 'destroy', 'update']]);
 
 Route::match(['put','patch'], 'users/{id}/resetpassword', 'UserController@resetpassword')->name('users.resetpassword');

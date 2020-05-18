@@ -44,9 +44,6 @@
 						            <button data-toggle="modal" data-target="#siteconfig" class="dropdown-item" id="getConfig" data-url="{{ route('sites.getConfig',['id'=>$site->id])}}">Config</button>
 						            <button data-toggle="modal" data-target="#sitecomments" class="dropdown-item" id="getComments" data-url="{{ route('sites.getComments',['id'=>$site->id])}}">Comments</button>   
 						        	<button data-toggle="modal" data-target="#upgradesite" class="dropdown-item" id="upgrade" data-site_id="{{ $site->id }}" data-site_name="{{ $site->siteName }}">Upgrade</button>
-						        		<a href="/sites/{{ $site->id }}/notes/resv/1" class="dropdown-item" target="_blank">Convert first batch of Reservation Notes</a>
-						        		<a href="/sites/{{ $site->id }}/notes/visit/1" class="dropdown-item" target="_blank">Convert first batch of Visit Notes</a>
-						        		<a href="/sites/{{ $site->id }}/notes/psg/1" class="dropdown-item" target="_blank">Convert first batch of PSG Notes (DO LAST)</a>
 						        	@if($site->config && $site->config['site']['Mode'] == "demo")
 						        		<a href="{{ route('sites.setLive', $site) }}" class="dropdown-item">Set Live</a>
 						        	@endif

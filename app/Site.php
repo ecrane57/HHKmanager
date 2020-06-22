@@ -172,7 +172,7 @@ class Site extends Model
 		
 		if(isset($this->config['site']['Site_Name'])){
 			return $this->config['site']['Site_Name'];
-		}else if($this->sysconfig["siteName"]){
+		}else if(isset($this->sysconfig["siteName"])){
 			return $this->sysconfig["siteName"]->Value;
 		}else if($this->name){
 			return $this->name;

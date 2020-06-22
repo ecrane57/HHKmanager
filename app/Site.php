@@ -22,11 +22,20 @@ class Site extends Model
     
     public function getConfigAttribute(){
 	    try{
-		    return parse_ini_string(Storage::disk("prod")->get($this->url . "/conf/site.cfg"), true);
+	        $fullconfig = parse_ini_string(Storage::disk("prod")->get($this->url . "/conf/site.cfg"), true);
 	    }catch(\FileNotFoundException $e){
 		    return false;
 	    }catch(\Exception $e){
 		    return false;
+	    }
+	    
+	    try{
+	        $config = array();
+	        $config['site'] = $fullconfig['site'];
+	        $config['db'] = $fullconfig['db'];
+	        return $config;
+	    }catch(\Exception $e){
+	        return $fullconfig;
 	    }
     }
     
@@ -35,20 +44,19 @@ class Site extends Model
 		    $file = Storage::disk("prod")->get($this->url . "/classes/SysConst.php");
 			preg_match("/^class CodeVersion.*\s*const BUILD = ([0-9]*).*\s*const VERSION = ([0-9, .]*)/m", $file, $array);
 			preg_match("/^class CodeVersion.*\s*const BUILD = '(.*)'.*\s*const VERSION = '(.*)'/m", $file, $array2);
+	    
+    	    if(count($array) >= 3 && $array[2] != '' && $array[1] != ''){
+    		    return $array[2] . "." . $array[1];
+    	    }else if(count($array2) >= 3 && $array2[2] != '' && $array2[1] != ''){
+    			return $array2[2] . "." . $array2[1];
+    		}else if(isset($this->config['code']['Version'])){
+    		    return $this->config['code']['Version'] . " build " . $this->config['code']['Build'];
+    		}else{
+    		    return "Version not found";
+    		}
 	    }catch(\Exception $e){
-		    return "Version not found";
+	        return "Version not found";
 	    }
-	    
-	    if(count($array) >= 3 && $array[2] != '' && $array[1] != ''){
-		    return $array[2] . "." . $array[1];
-	    }else if(count($array2) >= 3 && $array2[2] != '' && $array2[1] != ''){
-			return $array2[2] . "." . $array2[1];
-		}else if(isset($this->config['code']['Version'])){
-		    return $this->config['code']['Version'] . " build " . $this->config['code']['Build'];
-	    }else{
-			return $version;
-		}
-	    
     }
     
     public function getSchemaAttribute(){
@@ -90,7 +98,9 @@ class Site extends Model
     
     public function getSysconfigAttribute(){
 	    try{
-	    	$result = $this->schema->table('sys_config')->select('Key', 'Value')->get()->keyBy('Key');
+	    	$result = $this->schema->table('sys_config')->select('Key', 'Value')
+	    	->whereIn('Key', ['siteName', 'Zip_Code', 'RoomPriceModel', 'tz'])
+	    	->get()->keyBy('Key');
 	    }catch(\Illuminate\Database\QueryException $e){
 		    $result = false;
 	    }
@@ -116,11 +126,16 @@ class Site extends Model
     }
     
     public function getPriceModelAttribute(){
-	    if($this->sysconfig){
-	    	$priceModelCode = $this->sysconfig->get('RoomPriceModel')->Value;
-	    }else{
-		    $priceModelCode = false;
-	    }
+        try{
+    	    if($this->sysconfig){
+    	    	$priceModelCode = $this->sysconfig->get('RoomPriceModel')->Value;
+    	    }else{
+    		    $priceModelCode = false;
+    	    }
+        }catch(\Exception $e){
+            return $e->getMessage();
+        }
+        
 	    if($priceModelCode){
 		    try{
 	    		$priceModel =  $this->schema->table('gen_lookups')->select('Description')->where([['Table_name', '=', 'Price_Model'],['Code', '=', $priceModelCode]])->first();
@@ -169,15 +184,18 @@ class Site extends Model
     }
     
     public function getSiteNameAttribute(){
-		
-		if(isset($this->config['site']['Site_Name'])){
-			return $this->config['site']['Site_Name'];
-		}else if(isset($this->sysconfig["siteName"])){
-			return $this->sysconfig["siteName"]->Value;
-		}else if($this->name){
-			return $this->name;
-		}else{
-			$this->url;
-		}
+        try{
+    		if(isset($this->config['site']['Site_Name'])){
+    			return $this->config['site']['Site_Name'];
+    		}else if(isset($this->sysconfig["siteName"])){
+    			return $this->sysconfig["siteName"]->Value;
+    		}else if($this->name){
+    			return $this->name;
+    		}else{
+    			$this->url;
+    		}
+        }catch(\Exception $e){
+            return $e->getMessage();
+        }
     }
 }

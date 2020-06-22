@@ -105,7 +105,7 @@
 		    }
 		    
 			$('#sitesTable').DataTable({
-				"pageLength": 25
+				"pageLength": 50
 			});
 
 	    });

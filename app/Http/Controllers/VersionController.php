@@ -95,6 +95,8 @@ class VersionController extends Controller
 		        if(Storage::disk("hhk")->exists($extractedpath . "/release_notes.txt")){
 			        $releaseNotes = Storage::disk("hhk")->get($extractedpath . "/release_notes.txt");
 			        $releaseNotes = str_replace(["\r\n", "\r", "\n"], '<br>', $releaseNotes);
+		        }else{
+		            $releaseNotes = $request->release_notes;
 		        }
 		        
 		        $version = new Version;

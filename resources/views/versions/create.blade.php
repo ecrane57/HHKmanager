@@ -48,6 +48,10 @@
 				      		</label>
 			      		</div>
 			      		<div class="form-group">
+				      		{!! Form::label('release_notes', 'Release Notes'); !!}
+				      		{!! Form::textarea('release_notes', '', ['class'=>'form-control', 'placeholder'=>'Add any included features or manual update steps here...']); !!}
+			      		</div>
+			      		<div class="form-group">
 				      		{!! Form::label('releaseDate', 'Release Date'); !!}
 				      		{!! Form::date('releaseDate', \Carbon\Carbon::now(), ['class'=>'form-control']); !!}
 			      		</div>

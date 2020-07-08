@@ -380,6 +380,7 @@ class SiteController extends Controller
 	    }
 */
 	    $site->delete();
-	    session::flash('success', "Site removed from dashboard successfully - No files were deleted.");
+	    Session::flash('success', "Site removed from dashboard successfully - No files were deleted.<br>If you plan on deleting the site completely, don't forget to delete the files, database and database user");
+        return redirect()->back();
     }
 }

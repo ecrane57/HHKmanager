@@ -47,6 +47,7 @@
 						        	@if($site->config && $site->config['site']['Mode'] == "demo")
 						        		<a href="{{ route('sites.setLive', $site) }}" class="dropdown-item">Set Live</a>
 						        	@endif
+						        	<button data-toggle="modal" data-target="#deletesite" class="dropdown-item" id="delete" data-site_id="{{ $site->id }}" data-site_name="{{ $site->siteName }}">Remove</button>
 						        	<!--<a href="{{ route('sites.destroy', $site) }}" class="dropdown-item">Delete Site</a>-->
 					            </div>
 				            </div>

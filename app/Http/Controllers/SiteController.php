@@ -258,6 +258,14 @@ class SiteController extends Controller
 				}elseif(isset($json->errorMsg) && $json->errorMsg != ""){
 					Session::flash('error', "<pre>" . $scriptoutput . "\nHHK response: \n" . $json->errorMsg .  "</pre>");
 				}elseif(isset($json->resultMsg)){
+				    
+				    $comment = new Comment;
+				    $comment->body = "Site updated to " . $version->name;
+				    $comment->author()->associate(Auth::user());
+				    $comment->save();
+				    
+				    $site->comments()->save($comment);
+				    
 					Session::flash('success', "<pre>" . $scriptoutput . "\nHHK response: \n" . $json->resultMsg .  "</pre>");
 				}else{
 					Session::flash('error', "An unknown error occurred.<br>Possible solution: Does ws_update.php exist in the page table?<br>script results (if any) <br><pre>" . $scriptoutput . "</pre>"  . $site->config['db']['Schema']);

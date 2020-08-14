@@ -41,7 +41,13 @@ class Site extends Model
     
     public function getVersionAttribute(){
 	    try{
-		    $file = Storage::disk("prod")->get($this->url . "/classes/SysConst.php");
+	        if(Storage::disk("prod")->exists($this->url . "/classes/SysConst/CodeVersion.php")){
+	            $file = Storage::disk("prod")->get($this->url . "/classes/SysConst/CodeVersion.php");
+	        }else if(Storage::disk("prod")->exists($this->url . "/classes/SysConst.php")){
+	            $file = Storage::disk("prod")->get($this->url . "/classes/SysConst.php");
+	        }else{
+	            return "CodeVersion file not found";
+	        }
 			preg_match("/^class CodeVersion.*\s*const BUILD = ([0-9]*).*\s*const VERSION = ([0-9, .]*)/m", $file, $array);
 			preg_match("/^class CodeVersion.*\s*const BUILD = '(.*)'.*\s*const VERSION = '(.*)'/m", $file, $array2);
 	    

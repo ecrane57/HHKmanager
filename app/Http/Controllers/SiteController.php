@@ -223,6 +223,7 @@ class SiteController extends Controller
 		    $client = new Client(); //GuzzleHttp\Client
 		    
 		    //Check password
+		    //old password check
 		    $passwordResult = $client->request('GET', $upgradeURL, [
 				'query' => [
 					'cd' => $site->config['db']['Schema'],
@@ -233,6 +234,19 @@ class SiteController extends Controller
 			]);
 			
 			$passwordJson = json_decode($passwordResult->getBody());
+			
+			if(!isset($passwordJson->init)){
+			    $passwordResult = $client->request('POST', $upgradeURL, [
+			        'query' => [
+			            'cd' => $site->config['db']['Schema'],
+			            'un' => $request->user,
+			            'so' => $request->pw,
+			            'ck' => 'y'
+			        ]
+			    ]);
+			    
+			    $passwordJson = json_decode($passwordResult->getBody());
+			}
 			
 			if(isset($passwordJson->resultMsg) && $passwordJson->resultMsg == "bubbly"){
 		    
@@ -252,6 +266,20 @@ class SiteController extends Controller
 				]);
 				
 				$json = json_decode($result->getBody());
+				
+				if(!isset($json->init)){
+				    
+				    $result = $client->request('POST', $upgradeURL, [
+				        'query' => [
+				            'cd' => $site->config['db']['Schema'],
+				            'un' => $request->user,
+				            'so' => $request->pw,
+				        ]
+				    ]);
+				    
+				    $json = json_decode($result->getBody());
+				    
+				}
 				
 				if(isset($json->error)){
 					Session::flash('error', "<pre>" . $scriptoutput . "\nHHK response: \n" . $json->error .  "</pre>");	

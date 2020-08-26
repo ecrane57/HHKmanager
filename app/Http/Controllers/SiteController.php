@@ -215,6 +215,8 @@ class SiteController extends Controller
 		    'pw' => ['required'],
 	    ));
 	    try{
+	    	
+	    	$siteError = '';
 		    
 		    $version = Version::find($request->version_id);
 		    $site = Site::find($request->site_id);
@@ -236,8 +238,9 @@ class SiteController extends Controller
 			$passwordJson = json_decode($passwordResult->getBody());
 			
 			if(!isset($passwordJson->init)){
+				
 			    $passwordResult = $client->request('POST', $upgradeURL, [
-			        'query' => [
+			        'form_params' => [
 			            'cd' => $site->config['db']['Schema'],
 			            'un' => $request->user,
 			            'so' => $request->pw,
@@ -246,6 +249,10 @@ class SiteController extends Controller
 			    ]);
 			    
 			    $passwordJson = json_decode($passwordResult->getBody());
+			}
+			
+			if (isset($passwordJson->error)) {
+				$siteError = $passwordJson->error;
 			}
 			
 			if(isset($passwordJson->resultMsg) && $passwordJson->resultMsg == "bubbly"){
@@ -270,7 +277,7 @@ class SiteController extends Controller
 				if(!isset($json->init)){
 				    
 				    $result = $client->request('POST', $upgradeURL, [
-				        'query' => [
+				        'form_params' => [
 				            'cd' => $site->config['db']['Schema'],
 				            'un' => $request->user,
 				            'so' => $request->pw,
@@ -300,7 +307,7 @@ class SiteController extends Controller
 				}
 				
 			}else{
-				Session::flash('error', "Unable to update - Invalid Password");
+				Session::flash('error', "Unable to update - Invalid Password.  " . $siteError);
 			}
 	    }catch(\Exception $e){
 		   	Session::flash("error", "The following error has occurred: \n" . $e->getMessage() . " Line: " . $e->getLine());
